@@ -1,0 +1,7 @@
+description: Deis Workflow Migration
+home: https://github.com/deis/workflow-migration
+maintainers:
+- email: engineering@deis.com
+  name: Deis Team
+name: workflow-migration
+version: v1.0.0

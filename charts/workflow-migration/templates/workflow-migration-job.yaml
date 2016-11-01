@@ -1,0 +1,21 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: workflow-migration
+  labels:
+    heritage: deis
+spec:
+  template:
+    metadata:
+      name: workflow-migration
+    spec:
+      containers:
+      - name: workflow-migration
+        image: quay.io/deis/workflow-migration:canary
+        imagePullPolicy: Always
+        env:
+          - name: RELEASE_NAME
+            value: {{ .Values.release_name }}
+          - name: WORKFLOW_VERSION
+            value: {{ .Values.workflow_version }}
+      restartPolicy: Never
