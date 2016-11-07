@@ -4,6 +4,8 @@ package pkg
 // changed appropriately for the use-case.
 
 import (
+	"bytes"
+	"compress/gzip"
 	"encoding/base64"
 	"errors"
 	"strconv"
@@ -75,5 +77,14 @@ func encodeRelease(rls *rspb.Release) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	return b64.EncodeToString(b), nil
+	var buf bytes.Buffer
+	w, err := gzip.NewWriterLevel(&buf, gzip.BestCompression)
+	if err != nil {
+		return "", err
+	}
+	if _, err = w.Write(b); err != nil {
+		return "", err
+	}
+	w.Close()
+	return b64.EncodeToString(buf.Bytes()), nil
 }

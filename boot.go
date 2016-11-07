@@ -27,6 +27,12 @@ func main() {
 		log.Fatalf("Failed to create client: %v", err)
 	}
 
+	raw, err := pkg.GetValues(kubeClient)
+	if err != nil {
+		log.Fatalf("Failed to get values: %v", err)
+	}
+	fmt.Println(raw)
+
 	secrets := []string{"builder-key-auth", "builder-ssh-private-keys", "database-creds", "django-secret-key", "logger-redis-creds"}
 
 	// Adding the annotation as pre-install hooks will make sure that they don't change
@@ -42,6 +48,7 @@ func main() {
 
 	ts := timeconv.Now()
 	workflowVersion := getenv("WORKFLOW_VERSION", "v2.7.0")
+	config := &chart.Config{Raw: raw}
 	chartmetadata := &chart.Metadata{Name: "workflow", Version: workflowVersion}
 
 	// Get the manifest based on the current workflow install which are identfied
@@ -58,7 +65,8 @@ func main() {
 		Name:      releaseName,
 		Namespace: "deis",
 		Version:   1,
-		Chart:     &chart.Chart{Metadata: chartmetadata},
+		Config:    config,
+		Chart:     &chart.Chart{Metadata: chartmetadata, Values: config},
 		Info: &rspb.Info{
 			FirstDeployed: ts,
 			LastDeployed:  ts,

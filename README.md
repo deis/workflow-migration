@@ -29,10 +29,10 @@ NAME    	     REVISION	  UPDATED                 	STATUS  	CHART
 deis-workflow	  1       	 Tue Nov  1 11:09:54 2016	DEPLOYED	workflow-v2.7.0
 ```
 
-3) Upgrade to a new workflow release using the new helm. A values file with the details of external configuration used during the install is needed during an upgrade from helm classic to helm.
+3) Upgrade to a new workflow release using the new helm. All the configuration used during create will be preserved over the update.
 ```
 $ helm repo add deis https://charts.deis.com/workflow
-$ helm upgrade <release_name> deis/workflow --version=<desired version> -f <path to the values.yaml>
+$ helm upgrade <release_name> deis/workflow --version=<desired version>
 ```
 
 # License
