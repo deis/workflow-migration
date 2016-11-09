@@ -7,37 +7,83 @@ For more information about the Deis Workflow, please visit the main project page
 We welcome your input! If you have feedback, please [submit an issue][issues]. If you'd like to participate in development, please read the "Development" section below and [submit a pull request][prs].
 
 # About
-The Workflow Migration service is used to migrate from an helm classic install of the workflow to helm without destroying the existing cluster or having any downtime for the apps. It does so by first checking the current install of workflow and creating a release artifact similar to the one helm creates during an install thereby making helm think that the current install is actually created by it. Then workflow can be simply upgraded whenever needed using the helm charts.
+The Workflow Migration service is used to migrate from a [helm-classic](https://github.com/helm/helm-classic) install of Workflow to [Kubernetes Helm](https://github.com/kubernetes/helm) without destroying the existing cluster or having any downtime for the apps. It does so by first checking the current install of Workflow and creating a release artifact similar to the one Kubernetes helm creates during an install thereby making Kubernetes Helm think that the current install is actually created by it. Then Workflow can be simply upgraded whenever needed using the Kubernetes Helm charts.
+
+> Warning: Only workflow install on or after v2.6.0 can be upgraded using this migration service.
 
 # Usage
-1) Run the migration service to create a helm release object.
+1) Check that kubernetes helm and its corresponding server component tiller are [installed](https://github.com/kubernetes/helm/blob/master/docs/install.md).
+
+2) Fetch the builder and controller deployment objects just to make sure that the existing install state can achieved if the deis migration service fails. Deis migration service deletes the builder and controller deployment objects because of an [issue](https://github.com/kubernetes/kubernetes/issues/35134) in kubernetes with the patching.
+```
+$ kubectl --namespace=deis get deployment deis-builder -o yaml > ~/active-deis-builder-deployment.yaml
+$ kubectl --namespace=deis get deployment deis-controller -o yaml > ~/active-deis-controller-deployment.yaml
+```
+
+3) Run the migration service to create a helm release object based on the current workflow install. If not otherwise specified, the workflow_release_name will be `deis-workflow` and workflow_version will be `v2.7.0`.
 ```
 $ git clone https://github.com/deis/workflow-migration.git
 $ cd workflow-migration
-$ helm install ./charts/workflow-migration/ --set release_name=<optional release name for the helm>,workflow_version=<optional current version of workflow>
+$ helm install ./charts/workflow-migration/ --set workflow_release_name=<optional release name for the helm>,workflow_version=<optional current version of workflow>
 ```
 or
 ```
-$ helm repo add deismigration https://charts.deis.com/migration
-$ helm install deismigraton/workflow-migration --set release_name=<optional release name for the helm>,workflow_version=<optional current version of workflow>
+$ helm repo add workflow-migration https://charts.deis.com/workflow-migration
+$ helm install workflow-migration/workflow-migration --set workflow_release_name=<optional release name for the helm>,workflow_version=<optional current version of workflow>
 ```
 
-2) Check that the job ran successfully. Name will the release_name provided which default to `deis-workflow` if not provided and chart version will default to `v2.7.0` if workflow_version is not provided during the install.
+4) Check that the job ran successfully. Also check that helm release is created for the current workflow install using `helm list` where Name will be the workflow_release_name and chart version will be the workflow_version.
 ```
+$ kubectl get jobs
+NAME                 DESIRED   SUCCESSFUL   AGE
+workflow-migration   1         1            48s
+
 $ helm list
-NAME    	     REVISION	  UPDATED                 	STATUS  	CHART          
-deis-workflow	  1       	 Tue Nov  1 11:09:54 2016	DEPLOYED	workflow-v2.7.0
+NAME    	     REVISION	  UPDATED                 	 STATUS  	  CHART    
+erstwhile-oran   1         Wed Nov  1 11:09:34 2016   DEPLOYED   workflow-migration-v1.0.0      
+deis-workflow	   1       	 Tue Nov  1 11:09:54 2016	  DEPLOYED	 workflow-v2.7.0
 ```
 
-3) Upgrade to a new workflow release using the new helm. All the configuration used during create will be preserved over the update.
+5) Upgrade to a new workflow release using the kubernetes helm. All the configuration used during install of workflow will be preserved over the update. You can check the configuration before upgrading to the new release.
 ```
+$ helm get values <workflow_release_name>  ## will print the configuration values
+
 $ helm repo add deis https://charts.deis.com/workflow
-$ helm upgrade <release_name> deis/workflow --version=<desired version>
+$ helm upgrade <workflow_release_name> deis/workflow --version=<desired version>
+```
+
+6) Verify that all components have started and passed their readiness checks:
+```
+$ kubectl --namespace=deis get pods
+NAME                                     READY     STATUS    RESTARTS   AGE
+deis-builder-2448122224-3cibz            1/1       Running   0          5m
+deis-controller-1410285775-ipc34         1/1       Running   3          5m
+deis-database-e7c5z                      1/1       Running   0          5m
+deis-logger-cgjup                        1/1       Running   3          5m
+deis-logger-fluentd-45h7j                1/1       Running   0          5m
+deis-logger-fluentd-4z7lw                1/1       Running   0          5m
+deis-logger-fluentd-k2wsw                1/1       Running   0          5m
+deis-logger-fluentd-skdw4                1/1       Running   0          5m
+deis-logger-redis-8nazu                  1/1       Running   0          5m
+deis-monitor-grafana-tm266               1/1       Running   0          5m
+deis-monitor-influxdb-ah8io              1/1       Running   0          5m
+deis-monitor-telegraf-51zel              1/1       Running   1          5m
+deis-monitor-telegraf-cdasg              1/1       Running   0          5m
+deis-monitor-telegraf-hea6x              1/1       Running   0          5m
+deis-monitor-telegraf-r7lsg              1/1       Running   0          5m
+deis-nsqd-3yrg2                          1/1       Running   0          5m
+deis-registry-1814324048-yomz5           1/1       Running   0          5m
+deis-registry-proxy-4m3o4                1/1       Running   0          5m
+deis-registry-proxy-no3r1                1/1       Running   0          5m
+deis-registry-proxy-ou8is                1/1       Running   0          5m
+deis-registry-proxy-zyajl                1/1       Running   0          5m
+deis-router-1357759721-a3ard             1/1       Running   0          5m
+deis-workflow-manager-2654760652-kitf9   1/1       Running   0          5m
 ```
 
 # License
 
-Copyright 2013, 2014, 2015, 2016 Engine Yard, Inc.
+Copyright 2016 Engine Yard, Inc.
 
 Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with the License. You may obtain a copy of the License at <http://www.apache.org/licenses/LICENSE-2.0>
 

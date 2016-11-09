@@ -2,14 +2,11 @@ SHORT_NAME ?= workflow-migration
 
 include versioning.mk
 
-# Enable vendor/ directory support.
-export GO15VENDOREXPERIMENT=1
-
 # dockerized development environment variables
 REPO_PATH := github.com/deis/${SHORT_NAME}
 DEV_ENV_IMAGE := quay.io/deis/go-dev:0.20.0
 DEV_ENV_WORK_DIR := /go/src/${REPO_PATH}
-DEV_ENV_PREFIX := docker run --rm -e GO15VENDOREXPERIMENT=1 -v ${CURDIR}:${DEV_ENV_WORK_DIR} -w ${DEV_ENV_WORK_DIR}
+DEV_ENV_PREFIX := docker run --rm -v ${CURDIR}:${DEV_ENV_WORK_DIR} -w ${DEV_ENV_WORK_DIR}
 DEV_ENV_CMD := ${DEV_ENV_PREFIX} ${DEV_ENV_IMAGE}
 
 # SemVer with build information is defined in the SemVer 2 spec, but Docker
@@ -42,4 +39,4 @@ build: build-binary
 	docker build --rm -t ${IMAGE} rootfs
 	docker tag ${IMAGE} ${MUTABLE_IMAGE}
 
-.PHONY: all docker-build test
+.PHONY: all build push test
