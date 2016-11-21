@@ -434,6 +434,14 @@ func (v *valuesConfig) updateRedisparams(kubeClient *kcl.Client) error {
 		}
 		v.Redis.Password = string(redisSecret.Data["password"])
 		v.RedisLocation = offCluster
+		// Update the redis secret as the secret template updated in the new helm charts.
+		// `helm upgrade` doesn't upgrade as this set as pre-install hook.
+		redisSecret.Data["db"] = []byte(v.Redis.DB)
+		redisSecret.Data["host"] = []byte(v.Redis.Host)
+		redisSecret.Data["port"] = []byte(v.Redis.Port)
+		if _, err := kubeClient.Secrets("deis").Update(redisSecret); err != nil {
+			return err
+		}
 	}
 
 	return nil
@@ -461,7 +469,7 @@ func (v *valuesConfig) updateDatabaseParams(kubeClient *kcl.Client) error {
 			}
 		}
 		if postgresDetails.Name != "" {
-			postgresSecret, err := kubeClient.Secrets("deis").Get("deis-database")
+			postgresSecret, err := kubeClient.Secrets("deis").Get("database-creds")
 			if err != nil {
 				return err
 			}
@@ -469,6 +477,14 @@ func (v *valuesConfig) updateDatabaseParams(kubeClient *kcl.Client) error {
 			postgresDetails.Password = string(postgresSecret.Data["password"])
 			v.Postgres = postgresDetails
 			v.DatabaseLocation = offCluster
+			// Update the database secret as the secret template updated in the new helm charts.
+			// `helm upgrade` doesn't upgrade as this set as pre-install hook.
+			postgresSecret.Data["name"] = []byte(postgresDetails.Name)
+			postgresSecret.Data["host"] = []byte(postgresDetails.Host)
+			postgresSecret.Data["port"] = []byte(postgresDetails.Port)
+			if _, err := kubeClient.Secrets("deis").Update(postgresSecret); err != nil {
+				return err
+			}
 		}
 	}
 	return nil
