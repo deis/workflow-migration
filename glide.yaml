@@ -1,0 +1,26 @@
+package: github.com/deis/workflow-migration
+import:
+- package: k8s.io/client-go/1.4
+  version: 0b62e254fe853d89b1d8d3445bbdab11bcc11bc3
+- package: github.com/ghodss/yaml
+- package: github.com/golang/protobuf
+  subpackages:
+  - proto
+- package: k8s.io/helm
+  subpackages:
+  - pkg/proto/hapi/chart
+  - pkg/proto/hapi/release
+  - pkg/timeconv
+- package: k8s.io/kubernetes
+  version: ~1.4.1
+  subpackages:
+  - pkg/api
+  - pkg/api/errors
+  - pkg/api/meta
+  - pkg/client/unversioned
+  - pkg/fields
+  - pkg/kubectl/cmd/util
+  - pkg/kubectl/resource
+  - pkg/labels
+  - pkg/runtime
+  - pkg/util/strategicpatch
