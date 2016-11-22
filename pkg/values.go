@@ -147,7 +147,7 @@ global:
   # - azure: Store persistent data in Azure's object storage
   # - gcs: Store persistent data in Google Cloud Storage
   # - minio: Store persistent data on in-cluster Minio server
-  storage: {{ .StorageLocation }}
+  storage: "{{ .StorageLocation }}"
   # Set the location of Workflow's PostgreSQL database
   #
   # Valid values are:
@@ -155,26 +155,26 @@ global:
   #   automatically; backups are sent to object storage
   #   configured above)
   # - off-cluster: Run PostgreSQL outside the Kubernetes cluster (configure in database section)
-  database_location: {{ .DatabaseLocation }}
+  database_location: "{{ .DatabaseLocation }}"
   # Set the location of Workflow's logger-specific Redis instance
   #
   # Valid values are:
   # - on-cluster: Run Redis within the Kubernetes cluster
   # - off-cluster: Run Redis outside the Kubernetes cluster (configure in loggerRedis section)
-  logger_redis_location: {{ .RedisLocation }}
+  logger_redis_location: "{{ .RedisLocation }}"
 
   # Set the location of Workflow's influxdb cluster
   #
   # Valid values are:
   # - on-cluster: Run Influxdb within the Kubernetes cluster
   # - off-cluster: Influxdb is running outside of the cluster and credentials and connection information will be provided.
-  influxdb_location: {{ .InfluxDBLocation }}
+  influxdb_location: "{{ .InfluxDBLocation }}"
   # Set the location of Workflow's grafana instance
   #
   # Valid values are:
   # - on-cluster: Run Grafana within the Kubernetes cluster
   # - off-cluster: Grafana is running outside of the cluster
-  grafana_location: {{ .GrafanaLocation }}
+  grafana_location: "{{ .GrafanaLocation }}"
 
   # Set the location of Workflow's Registry
   #
@@ -183,51 +183,51 @@ global:
   # - off-cluster: Use registry outside the Kubernetes cluster (example: dockerhub,quay.io,self-hosted)
   # - ecr: Use Amazon's ECR
   # - gcr: Use Google's GCR
-  registry_location: {{ .RegistryLocation }}
+  registry_location: "{{ .RegistryLocation }}"
   # The host port to which registry proxy binds to
   host_port: {{ .RegistryHostPort }}
   # Prefix for the imagepull secret created when using private registry
-  secret_prefix: {{ .ImagePullSecretPrefix }}
+  secret_prefix: "{{ .ImagePullSecretPrefix }}"
 
 {{ if ne .S3.Region "" }}
 s3:
   # Your AWS access key. Leave it empty if you want to use IAM credentials.
-  accesskey: {{ .S3.AccessKey }}
+  accesskey: "{{ .S3.AccessKey }}"
   # Your AWS secret key. Leave it empty if you want to use IAM credentials.
-  secretkey: {{ .S3.SecretKey }}
+  secretkey: "{{ .S3.SecretKey }}"
   # Any S3 region
-  region: {{ .S3.Region }}
+  region: "{{ .S3.Region }}"
   # Your buckets.
-  registry_bucket: {{ .S3.RegistryBucket }}
-  database_bucket: {{ .S3.DatabaseBucket }}
-  builder_bucket: {{ .S3.BuilderBucket }}
+  registry_bucket: "{{ .S3.RegistryBucket }}"
+  database_bucket: "{{ .S3.DatabaseBucket }}"
+  builder_bucket: "{{ .S3.BuilderBucket }}"
 {{ end }}
 {{ if ne .Azure.AccountName "" }}
 azure:
-  accountname: {{ .Azure.AccountName }}
-  accountkey: {{ .Azure.AccountKey }}
-  registry_container: {{ .Azure.RegistryContainer }}
-  database_container: {{ .Azure.DatabaseContainer }}
-  builder_container: {{ .Azure.BuilderContainer }}{{ end }}
+  accountname: "{{ .Azure.AccountName }}"
+  accountkey: "{{ .Azure.AccountKey }}"
+  registry_container: "{{ .Azure.RegistryContainer }}"
+  database_container: "{{ .Azure.DatabaseContainer }}"
+  builder_container: "{{ .Azure.BuilderContainer }}"{{ end }}
 {{ if ne .GCS.KeyJSON "" }}
 gcs:
   # key_json is expanded into a JSON file on the remote server. It must be
   # well-formatted JSON data.
   key_json: '{{ .GCS.KeyJSON }}'
-  registry_bucket: {{ .GCS.RegistryBucket }}
-  database_bucket: {{ .GCS.DatabaseBucket }}
-  builder_bucket: {{ .GCS.BuilderBucket }}{{ end }}
+  registry_bucket: "{{ .GCS.RegistryBucket }}"
+  database_bucket: "{{ .GCS.DatabaseBucket }}"
+  builder_bucket: "{{ .GCS.BuilderBucket }}"{{ end }}
 {{ if ne .Swift.UserName "" }}
 swift:
-  username: {{ .Swift.UserName }}
-  password: {{ .Swift.Password }}
-  authurl: {{ .Swift.AuthURL }}
+  username: "{{ .Swift.UserName }}"
+  password: "{{ .Swift.Password }}"
+  authurl: "{{ .Swift.AuthURL }}"
   # Your OpenStack tenant name if you are using auth version 2 or 3.
-  tenant: {{ .Swift.Tenant }}
-  authversion: {{ .Swift.AuthVersion }}
-  registry_container: {{ .Swift.RegistryContainer }}
-  database_container: {{ .Swift.DatabaseContainer }}
-  builder_container: {{ .Swift.BuilderContainer }}{{ end }}
+  tenant: "{{ .Swift.Tenant }}"
+  authversion: "{{ .Swift.AuthVersion }}"
+  registry_container: "{{ .Swift.RegistryContainer }}"
+  database_container: "{{ .Swift.DatabaseContainer }}"
+  builder_container: "{{ .Swift.BuilderContainer }}"{{ end }}
 
 # Set the default (global) way of how Application (your own) images are
 # pulled from within the Controller.
@@ -239,69 +239,65 @@ swift:
 # - Always
 # - IfNotPresent
 controller:
-  app_pull_policy: {{ .Controller.AppPullPolicy }}
+  app_pull_policy: "{{ .Controller.AppPullPolicy }}"
   # Possible values are:
   # enabled - allows for open registration
   # disabled - turns off open registration
   # admin_only - allows for registration by an admin only.
-  registration_mode: {{ .Controller.RegistrationMode }}
+  registration_mode: "{{ .Controller.RegistrationMode }}"
 {{ if ne .Postgres.Name "" }}
 database:
   # Configure the following ONLY if using an off-cluster PostgreSQL database
   postgres:
-    name: {{ .Postgres.Name }}
-    username: {{ .Postgres.UserName }}
-    password: {{ .Postgres.Password }}
-    host: {{ .Postgres.Host }}
-    port: {{ .Postgres.Port }}{{ end }}
+    name: "{{ .Postgres.Name }}"
+    username: "{{ .Postgres.UserName }}"
+    password: "{{ .Postgres.Password }}"
+    host: "{{ .Postgres.Host }}"
+    port: "{{ .Postgres.Port }}"{{ end }}
 {{ if ne .Redis.DB "" }}
 logger:
   redis:
     # Configure the following ONLY if using an off-cluster Redis instance for logger
-    db: {{ .Redis.DB }}
-    host: {{ .Redis.Host }}
-    port: {{ .Redis.Port }}
-    password: {{ .Redis.Password }}{{ end }}
+    db: "{{ .Redis.DB }}"
+    host: "{{ .Redis.Host }}"
+    port: "{{ .Redis.Port }}"
+    password: "{{ .Redis.Password }}"{{ end }}
 {{ if ne .Grafana.User "" }}
 monitor:
   grafana:
-    user: {{ .Grafana.User }}
-    password: {{ .Grafana.Password }}
+    user: "{{ .Grafana.User }}"
+    password: "{{ .Grafana.Password }}"
   # Configure the following ONLY if using an off-cluster Influx database
   influxdb:
-    url: {{ .InfluxDB.URL }}
-    database: {{ .InfluxDB.Database }}
-    user: {{ .InfluxDB.User }}
-    password: {{ .InfluxDB.Password }}{{ end }}
+    url: "{{ .InfluxDB.URL }}"
+    database: "{{ .InfluxDB.Database }}"
+    user: "{{ .InfluxDB.User }}"
+    password: "{{ .InfluxDB.Password }}"{{ end }}
 
 registry-token-refresher:
   # Time in minutes after which the token should be refreshed.
   # Leave it empty to use the default provider time.
   token_refresh_time: ""{{ if ne .OffClusterRegistry.UserName "" }}
   off_cluster_registry:
-    hostname: {{ .OffClusterRegistry.HostName }}
-    organization: {{ .OffClusterRegistry.Organization }}
-    username: {{ .OffClusterRegistry.UserName }}
-    password: {{ .OffClusterRegistry.Password }}{{ end }}{{ if ne .ECR.Region "" }}
+    hostname: "{{ .OffClusterRegistry.HostName }}"
+    organization: "{{ .OffClusterRegistry.Organization }}"
+    username: "{{ .OffClusterRegistry.UserName }}"
+    password: "{{ .OffClusterRegistry.Password }}"{{ end }}{{ if ne .ECR.Region "" }}
   ecr:
     # Your AWS access key. Leave it empty if you want to use IAM credentials.
-    accesskey: {{ .ECR.AccessKey }}
+    accesskey: "{{ .ECR.AccessKey }}"
     # Your AWS secret key. Leave it empty if you want to use IAM credentials.
-    secretkey: {{ .ECR.SecretKey }}
+    secretkey: "{{ .ECR.SecretKey }}"
     # Any S3 region
-    region: {{ .ECR.Region }}
-    registryid: {{ .ECR.RegistryID }}
-    hostname: {{ .ECR.HostName }}{{ end }}{{ if ne .GCR.KeyJSON "" }}
+    region: "{{ .ECR.Region }}"
+    registryid: "{{ .ECR.RegistryID }}"
+    hostname: "{{ .ECR.HostName }}"{{ end }}{{ if ne .GCR.KeyJSON "" }}
   gcr:
     key_json: '{{ .GCR.KeyJSON }}'
-    hostname: {{ .GCR.HostName }}{{ end }}
+    hostname: "{{ .GCR.HostName }}"{{ end }}
 {{ if ne .Router.DHParam "" }}
 router:
-  dhparam: {{ .Router.DHParam }}{{ end }}
-
-workflow-manager:
-  versions_api_url: https://versions-staging.deis.com
-  doctor_api_url: https://doctor-staging.deis.com
+  dhparam: "{{ .Router.DHParam }}"{{ end }}
 `
 )
 
@@ -438,6 +434,14 @@ func (v *valuesConfig) updateRedisparams(kubeClient *kcl.Client) error {
 		}
 		v.Redis.Password = string(redisSecret.Data["password"])
 		v.RedisLocation = offCluster
+		// Update the redis secret as the secret template updated in the new helm charts.
+		// `helm upgrade` doesn't upgrade as this set as pre-install hook.
+		redisSecret.Data["db"] = []byte(v.Redis.DB)
+		redisSecret.Data["host"] = []byte(v.Redis.Host)
+		redisSecret.Data["port"] = []byte(v.Redis.Port)
+		if _, err := kubeClient.Secrets("deis").Update(redisSecret); err != nil {
+			return err
+		}
 	}
 
 	return nil
@@ -465,7 +469,7 @@ func (v *valuesConfig) updateDatabaseParams(kubeClient *kcl.Client) error {
 			}
 		}
 		if postgresDetails.Name != "" {
-			postgresSecret, err := kubeClient.Secrets("deis").Get("deis-database")
+			postgresSecret, err := kubeClient.Secrets("deis").Get("database-creds")
 			if err != nil {
 				return err
 			}
@@ -473,6 +477,14 @@ func (v *valuesConfig) updateDatabaseParams(kubeClient *kcl.Client) error {
 			postgresDetails.Password = string(postgresSecret.Data["password"])
 			v.Postgres = postgresDetails
 			v.DatabaseLocation = offCluster
+			// Update the database secret as the secret template updated in the new helm charts.
+			// `helm upgrade` doesn't upgrade as this set as pre-install hook.
+			postgresSecret.Data["name"] = []byte(postgresDetails.Name)
+			postgresSecret.Data["host"] = []byte(postgresDetails.Host)
+			postgresSecret.Data["port"] = []byte(postgresDetails.Port)
+			if _, err := kubeClient.Secrets("deis").Update(postgresSecret); err != nil {
+				return err
+			}
 		}
 	}
 	return nil

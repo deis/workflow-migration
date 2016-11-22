@@ -15,7 +15,7 @@ spec:
         imagePullPolicy: Always
         env:
           - name: RELEASE_NAME
-            value: {{ .Values.release_name }}
+            value: {{ .Values.workflow_release_name }}
           - name: WORKFLOW_VERSION
             value: {{ .Values.workflow_version }}
       restartPolicy: Never
