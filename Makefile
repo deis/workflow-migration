@@ -22,7 +22,7 @@ all:
 
 # you need to strip the vendor because k8s doesn't use glide https://github.com/kubernetes/kubernetes/issues/25572
 bootstrap:
-	${DEV_ENV_CMD} glide install --strip-vendor --strip-vcs
+	${DEV_ENV_CMD} glide install --strip-vendor
 
 glideup:
 	${DEV_ENV_CMD} glide up
