@@ -5,8 +5,8 @@ import (
 	"errors"
 	"text/template"
 
-	apierrors "k8s.io/kubernetes/pkg/api/errors"
-	kcl "k8s.io/kubernetes/pkg/client/unversioned"
+	"k8s.io/client-go/1.5/kubernetes"
+	apierrors "k8s.io/client-go/1.5/pkg/api/errors"
 )
 
 const (
@@ -301,7 +301,7 @@ router:
 `
 )
 
-func (v *valuesConfig) updateStorageparams(kubeClient *kcl.Client) error {
+func (v *valuesConfig) updateStorageparams(kubeClient *kubernetes.Clientset) error {
 	objSecret, err := kubeClient.Secrets("deis").Get("objectstorage-keyfile")
 	if err != nil {
 		return err
@@ -353,7 +353,7 @@ func (v *valuesConfig) updateStorageparams(kubeClient *kcl.Client) error {
 	return nil
 }
 
-func (v *valuesConfig) updateRegistryparams(kubeClient *kcl.Client) error {
+func (v *valuesConfig) updateRegistryparams(kubeClient *kubernetes.Clientset) error {
 	v.RegistryLocation = onCluster
 	objSecret, err := kubeClient.Secrets("deis").Get("registry-secret")
 	if err != nil && !apierrors.IsNotFound(err) {
@@ -408,7 +408,7 @@ func (v *valuesConfig) updateRegistryparams(kubeClient *kcl.Client) error {
 	return nil
 }
 
-func (v *valuesConfig) updateRedisparams(kubeClient *kcl.Client) error {
+func (v *valuesConfig) updateRedisparams(kubeClient *kubernetes.Clientset) error {
 	v.RedisLocation = onCluster
 	v.Redis = redis{}
 	loggerDeployment, err := kubeClient.Deployments("deis").Get("deis-logger")
@@ -447,7 +447,7 @@ func (v *valuesConfig) updateRedisparams(kubeClient *kcl.Client) error {
 	return nil
 }
 
-func (v *valuesConfig) updateDatabaseParams(kubeClient *kcl.Client) error {
+func (v *valuesConfig) updateDatabaseParams(kubeClient *kubernetes.Clientset) error {
 	v.DatabaseLocation = onCluster
 	controllerDeployment, err := kubeClient.Deployments("deis").Get("deis-controller")
 	if err != nil && !apierrors.IsNotFound(err) {
@@ -490,7 +490,7 @@ func (v *valuesConfig) updateDatabaseParams(kubeClient *kcl.Client) error {
 	return nil
 }
 
-func (v *valuesConfig) updateInfluxparams(kubeClient *kcl.Client) error {
+func (v *valuesConfig) updateInfluxparams(kubeClient *kubernetes.Clientset) error {
 	v.InfluxDBLocation = onCluster
 	telegrafDaemonSet, err := kubeClient.DaemonSets("deis").Get("deis-monitor-telegraf")
 	if err != nil {
@@ -518,7 +518,7 @@ func (v *valuesConfig) updateInfluxparams(kubeClient *kcl.Client) error {
 	return nil
 }
 
-func (v *valuesConfig) updateGrafanaparams(kubeClient *kcl.Client) error {
+func (v *valuesConfig) updateGrafanaparams(kubeClient *kubernetes.Clientset) error {
 	v.GrafanaLocation = onCluster
 	_, err := kubeClient.Deployments("deis").Get("deis-monitor-grafana")
 	if err != nil {
@@ -530,7 +530,7 @@ func (v *valuesConfig) updateGrafanaparams(kubeClient *kcl.Client) error {
 	return nil
 }
 
-func (v *valuesConfig) updateControllerparams(kubeClient *kcl.Client) error {
+func (v *valuesConfig) updateControllerparams(kubeClient *kubernetes.Clientset) error {
 	v.Controller = controller{
 		AppPullPolicy:    "IfNotPresent",
 		RegistrationMode: "enabled",
@@ -553,7 +553,7 @@ func (v *valuesConfig) updateControllerparams(kubeClient *kcl.Client) error {
 }
 
 // GetValues gets the values used for cluster configuration
-func GetValues(kubeClient *kcl.Client) (string, error) {
+func GetValues(kubeClient *kubernetes.Clientset) (string, error) {
 	workflowConfig := &valuesConfig{}
 	err := workflowConfig.updateStorageparams(kubeClient)
 	if err != nil {

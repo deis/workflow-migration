@@ -20,8 +20,9 @@ BINDIR := ./rootfs
 all:
 	@echo "Use a Makefile to control top-level building of the project."
 
+# you need to strip the vendor because k8s doesn't use glide https://github.com/kubernetes/kubernetes/issues/25572
 bootstrap:
-	${DEV_ENV_CMD} glide install
+	${DEV_ENV_CMD} glide install --strip-vendor --strip-vcs
 
 glideup:
 	${DEV_ENV_CMD} glide up
