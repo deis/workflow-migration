@@ -12,11 +12,11 @@ The Workflow Migration service is used to migrate from a [helm-classic](https://
 > Warning: Only workflow install on or after v2.6.0 can be upgraded using this migration service.
 
 # Usage
-1) Check that kubernetes helm and its corresponding server component tiller are [installed](https://github.com/kubernetes/helm/blob/master/docs/install.md).
+1) Check that kubernetes helm and its corresponding server component tiller are [installed](https://github.com/kubernetes/helm/blob/master/docs/install.md). Be sure that the helm version is `>2.1.0` because of an issue with the upgrade in the prior versions which got fixed in [this pr](https://github.com/kubernetes/helm/pull/1734).
 
-2) Fetch the builder and controller deployment objects just to make sure that the existing install state can achieved if the deis migration service fails. Deis migration service deletes the builder and controller deployment objects because of an [issue](https://github.com/kubernetes/kubernetes/issues/35134) in kubernetes with the patching.
+2) Fetch the registry and controller deployment objects just to make sure that the existing install state can achieved if the deis migration service fails. If you are using the off-cluster registry then there won't be any registry deployment and no need to fetch it. Deis migration service deletes the registry and controller deployment objects because of an [issue](https://github.com/kubernetes/kubernetes/pull/35071) in kubernetes with the patching.
 ```
-$ kubectl --namespace=deis get deployment deis-builder -o yaml > ~/active-deis-builder-deployment.yaml
+$ kubectl --namespace=deis get deployment deis-registry -o yaml > ~/active-deis-registry-deployment.yaml
 $ kubectl --namespace=deis get deployment deis-controller -o yaml > ~/active-deis-controller-deployment.yaml
 ```
 

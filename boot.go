@@ -9,25 +9,33 @@ import (
 
 	"github.com/deis/workflow-migration/pkg"
 	"github.com/ghodss/yaml"
+	"k8s.io/client-go/1.5/kubernetes"
+	"k8s.io/client-go/1.5/pkg/api"
+	apierrors "k8s.io/client-go/1.5/pkg/api/errors"
+	"k8s.io/client-go/1.5/pkg/fields"
+	"k8s.io/client-go/1.5/pkg/labels"
+	"k8s.io/client-go/1.5/rest"
 	"k8s.io/helm/pkg/proto/hapi/chart"
 	rspb "k8s.io/helm/pkg/proto/hapi/release"
 	"k8s.io/helm/pkg/timeconv"
-	"k8s.io/kubernetes/pkg/api"
-	apierrors "k8s.io/kubernetes/pkg/api/errors"
-	kcl "k8s.io/kubernetes/pkg/client/unversioned"
-	"k8s.io/kubernetes/pkg/fields"
-	"k8s.io/kubernetes/pkg/labels"
 )
 
 const apiVersion = "v1"
 
 func main() {
-	kubeClient, err := kcl.NewInCluster()
+
+	// creates the in-cluster config
+	k8sConfig, err := rest.InClusterConfig()
+	if err != nil {
+		log.Fatalf("Failed to get config: %v", err)
+	}
+	// creates the clientset
+	clientset, err := kubernetes.NewForConfig(k8sConfig)
 	if err != nil {
 		log.Fatalf("Failed to create client: %v", err)
 	}
 
-	raw, err := pkg.GetValues(kubeClient)
+	raw, err := pkg.GetValues(clientset)
 	if err != nil {
 		log.Fatalf("Failed to get values: %v", err)
 	}
@@ -37,11 +45,11 @@ func main() {
 
 	// Adding the annotation as pre-install hooks will make sure that they don't change
 	// during the upgrade from helm classic to helm.
-	pkg.UpdateSecrets(kubeClient, secrets)
+	pkg.UpdateSecrets(clientset, secrets)
 
-	// Deployments needs to be deleted because of the issue in kubernetes patching
-	// https://github.com/kubernetes/kubernetes/issues/35134.
-	err = deleteDeployments(kubeClient)
+	// Deployments needs to be deleted because of the issue in kubernetes patching for releases before 1.4.4
+	// https://github.com/kubernetes/kubernetes/pull/35071.
+	err = deleteDeployments(clientset)
 	if err != nil && !apierrors.IsNotFound(err) {
 		log.Fatalf("failed to delete the deployment: %v", err)
 	}
@@ -53,7 +61,7 @@ func main() {
 
 	// Get the manifest based on the current workflow install which are identfied
 	// by the label `heritage: deis`.
-	manifestDoc, err := getManifest(kubeClient, secrets)
+	manifestDoc, err := getManifest(clientset, secrets)
 	if err != nil {
 		log.Fatal("get manifest error", err)
 	}
@@ -75,14 +83,14 @@ func main() {
 		Manifest: manifestDoc.String(),
 	}
 	cfgName := fmt.Sprintf("%s.v%d", releaseName, 1)
-	err = pkg.CfgCreate(cfgName, actualrel, kubeClient)
+	err = pkg.CfgCreate(cfgName, actualrel, clientset)
 	if err != nil {
 		log.Fatalf("Failed to create configMap: %v", err)
 	}
 }
 
-func deleteDeployments(kubeClient *kcl.Client) error {
-	deployments := [3]string{"deis-builder", "deis-controller", "deis-registry"}
+func deleteDeployments(kubeClient *kubernetes.Clientset) error {
+	deployments := [2]string{"deis-controller", "deis-registry"}
 	for _, deployment := range deployments {
 		err := kubeClient.ExtensionsClient.Deployments("deis").Delete(deployment, &api.DeleteOptions{})
 		if err != nil {
@@ -92,7 +100,7 @@ func deleteDeployments(kubeClient *kcl.Client) error {
 	return nil
 }
 
-func getManifest(kubeClient *kcl.Client, secretsArray []string) (*bytes.Buffer, error) {
+func getManifest(kubeClient *kubernetes.Clientset, secretsArray []string) (*bytes.Buffer, error) {
 	b := bytes.NewBuffer(nil)
 	labelMap := labels.Set{"heritage": "deis"}
 	var y []byte
@@ -198,7 +206,6 @@ func getManifest(kubeClient *kcl.Client, secretsArray []string) (*bytes.Buffer, 
 		deployment.Kind = "Deployment"
 		deployment.APIVersion = "extensions/v1beta1"
 		deployment.ResourceVersion = ""
-		deployment.ObjectMeta.Annotations = nil
 		y, err = yaml.Marshal(deployment)
 		if err != nil {
 			fmt.Printf("err: %v\n", err)

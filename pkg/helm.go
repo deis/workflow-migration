@@ -12,10 +12,10 @@ import (
 	"time"
 
 	"github.com/golang/protobuf/proto"
+	"k8s.io/client-go/1.5/kubernetes"
+	apierrors "k8s.io/client-go/1.5/pkg/api/errors"
+	"k8s.io/client-go/1.5/pkg/api/v1"
 	rspb "k8s.io/helm/pkg/proto/hapi/release"
-	"k8s.io/kubernetes/pkg/api"
-	apierrors "k8s.io/kubernetes/pkg/api/errors"
-	kcl "k8s.io/kubernetes/pkg/client/unversioned"
 )
 
 const tillerNamespace = "kube-system"
@@ -23,7 +23,7 @@ const tillerNamespace = "kube-system"
 var b64 = base64.StdEncoding
 
 // CfgCreate creates a configmap based on the release object
-func CfgCreate(key string, rls *rspb.Release, kubeClient *kcl.Client) error {
+func CfgCreate(key string, rls *rspb.Release, clientset *kubernetes.Clientset) error {
 	// set labels for configmaps object meta data
 	lbs := make(map[string]string)
 
@@ -35,7 +35,7 @@ func CfgCreate(key string, rls *rspb.Release, kubeClient *kcl.Client) error {
 		return err
 	}
 	// push the configmap object out into the kubiverse
-	if _, err := kubeClient.ConfigMaps(tillerNamespace).Create(obj); err != nil {
+	if _, err := clientset.ConfigMaps(tillerNamespace).Create(obj); err != nil {
 		if apierrors.IsAlreadyExists(err) {
 			return errors.New("already exists")
 		}
@@ -45,7 +45,7 @@ func CfgCreate(key string, rls *rspb.Release, kubeClient *kcl.Client) error {
 	return nil
 }
 
-func newConfigMapsObject(key string, rls *rspb.Release, lbs map[string]string) (*api.ConfigMap, error) {
+func newConfigMapsObject(key string, rls *rspb.Release, lbs map[string]string) (*v1.ConfigMap, error) {
 	const owner = "TILLER"
 
 	// encode the release
@@ -61,8 +61,8 @@ func newConfigMapsObject(key string, rls *rspb.Release, lbs map[string]string) (
 	lbs["VERSION"] = strconv.Itoa(int(rls.Version))
 
 	// create and return configmap object
-	return &api.ConfigMap{
-		ObjectMeta: api.ObjectMeta{
+	return &v1.ConfigMap{
+		ObjectMeta: v1.ObjectMeta{
 			Name:   key,
 			Labels: lbs,
 		},

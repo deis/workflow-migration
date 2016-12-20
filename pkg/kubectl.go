@@ -10,10 +10,10 @@ import (
 	"strings"
 
 	"github.com/ghodss/yaml"
+	"k8s.io/client-go/1.5/kubernetes"
+	apierrors "k8s.io/client-go/1.5/pkg/api/errors"
 	"k8s.io/kubernetes/pkg/api"
-	apierrors "k8s.io/kubernetes/pkg/api/errors"
 	"k8s.io/kubernetes/pkg/api/meta"
-	kcl "k8s.io/kubernetes/pkg/client/unversioned"
 	cmdutil "k8s.io/kubernetes/pkg/kubectl/cmd/util"
 	"k8s.io/kubernetes/pkg/kubectl/resource"
 	"k8s.io/kubernetes/pkg/runtime"
@@ -21,7 +21,7 @@ import (
 )
 
 // UpdateSecrets updates the secrets by adding the helm pre-install hook annotation
-func UpdateSecrets(kubeClient *kcl.Client, secrets []string) error {
+func UpdateSecrets(kubeClient *kubernetes.Clientset, secrets []string) error {
 	succChan, errChan := make(chan string), make(chan error)
 
 	for _, secret := range secrets {
@@ -39,7 +39,7 @@ func UpdateSecrets(kubeClient *kcl.Client, secrets []string) error {
 }
 
 // updateSecret annotates the secret if its present.
-func updateSecret(kubeClient *kcl.Client, secretName string, succChan chan<- string, errChan chan<- error) {
+func updateSecret(kubeClient *kubernetes.Clientset, secretName string, succChan chan<- string, errChan chan<- error) {
 	b := bytes.NewBuffer(nil)
 	// Secrets
 	secret, err := kubeClient.Secrets("deis").Get(secretName)
@@ -66,7 +66,7 @@ func updateSecret(kubeClient *kcl.Client, secretName string, succChan chan<- str
 	b.WriteString(string(y))
 
 	factory := cmdutil.NewFactory(nil)
-	current := factory.NewBuilder(true).ContinueOnError().NamespaceParam("deis").DefaultNamespace().Stream(b, "").Flatten().Do()
+	current := factory.NewBuilder().ContinueOnError().NamespaceParam("deis").DefaultNamespace().Stream(b, "").Flatten().Do()
 	err = current.Visit(func(info *resource.Info, err error) error {
 		if err != nil {
 			return err
