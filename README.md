@@ -12,40 +12,52 @@ The Workflow Migration service is used to migrate from a [helm-classic](https://
 > Warning: Only workflow install on or after v2.6.0 can be upgraded using this migration service.
 
 # Usage
-1) Check that kubernetes helm and its corresponding server component tiller are [installed](https://github.com/kubernetes/helm/blob/master/docs/install.md). Be sure that the helm version is `>2.1.0` because of an issue with the upgrade in the prior versions which got fixed in [this pr](https://github.com/kubernetes/helm/pull/1734).
+1) Check that kubernetes helm and its corresponding server component tiller are [installed](https://github.com/kubernetes/helm/blob/master/docs/install.md). Be sure that the helm version is `v2.1.3` or later because earlier versions have issues that may prevent upgrading successfully.
+
+```shell
+$ helm version
+Client: &version.Version{SemVer:"v2.1.3", GitCommit:"5cbc48fb305ca4bf68c26eb8d2a7eb363227e973", GitTreeState:"clean"}
+Server: &version.Version{SemVer:"v2.1.3", GitCommit:"5cbc48fb305ca4bf68c26eb8d2a7eb363227e973", GitTreeState:"clean"}
+```
 
 2) Fetch the registry and controller deployment objects just to make sure that the existing install state can achieved if the deis migration service fails. If you are using the off-cluster registry then there won't be any registry deployment and no need to fetch it. Deis migration service deletes the registry and controller deployment objects because of an [issue](https://github.com/kubernetes/kubernetes/pull/35071) in kubernetes with the patching.
-```
+
+```shell
 $ kubectl --namespace=deis get deployment deis-registry -o yaml > ~/active-deis-registry-deployment.yaml
 $ kubectl --namespace=deis get deployment deis-controller -o yaml > ~/active-deis-controller-deployment.yaml
 ```
 
 3) Run the migration service to create a helm release object based on the current workflow install. If not otherwise specified, the workflow_release_name will be `deis-workflow` and workflow_version will be `v2.7.0`.
-```
+
+```shell
 $ git clone https://github.com/deis/workflow-migration.git
 $ cd workflow-migration
 $ helm install ./charts/workflow-migration/ --set workflow_release_name=<optional release name for the helm>,workflow_version=<optional current version of workflow>
 ```
+
 or
-```
+
+```shell
 $ helm repo add workflow-migration https://charts.deis.com/workflow-migration
 $ helm install workflow-migration/workflow-migration --set workflow_release_name=<optional release name for the helm>,workflow_version=<optional current version of workflow>
 ```
 
 4) Check that the job ran successfully. Also check that helm release is created for the current workflow install using `helm list` where Name will be the workflow_release_name and chart version will be the workflow_version.
-```
+
+```shell
 $ kubectl get jobs
 NAME                 DESIRED   SUCCESSFUL   AGE
 workflow-migration   1         1            48s
 
 $ helm list
 NAME    	     REVISION	  UPDATED                 	 STATUS  	  CHART    
-erstwhile-oran   1         Wed Nov  1 11:09:34 2016   DEPLOYED   workflow-migration-v1.0.0      
-deis-workflow	   1       	 Tue Nov  1 11:09:54 2016	  DEPLOYED	 workflow-v2.7.0
+erstwhile-oran   1            Wed Nov  1 11:09:34 2016   DEPLOYED     workflow-migration-v1.0.0      
+deis-workflow    1            Tue Nov  1 11:09:54 2016   DEPLOYED     workflow-v2.7.0
 ```
 
 5) Upgrade to a new workflow release using the kubernetes helm. All the configuration used during install of workflow will be preserved over the update. You can check the configuration before upgrading to the new release.
-```
+
+```shell
 $ helm get values <workflow_release_name>  ## will print the configuration values
 
 $ helm repo add deis https://charts.deis.com/workflow
@@ -53,7 +65,8 @@ $ helm upgrade <workflow_release_name> deis/workflow --version=<desired version>
 ```
 
 6) Verify that all components have started and passed their readiness checks:
-```
+
+```shell
 $ kubectl --namespace=deis get pods
 NAME                                     READY     STATUS    RESTARTS   AGE
 deis-builder-2448122224-3cibz            1/1       Running   0          5m
